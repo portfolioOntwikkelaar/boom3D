@@ -199,160 +199,121 @@
     </div>
 
     <script>
-        let rotation = 0;
-        let isPaused = false;
-        let currentTree = 0; // 0 = silver, 1 = gold
-        let rotationSpeed = 0.3;
+      let rotation = 0;
+let isPaused = false;
+let currentTree = 0; // 0 = Telperion, 1 = Laurelin
+let rotationSpeed = 0.25;
 
-        function setup() {
-            createCanvas(windowWidth, windowHeight, WEBGL);
-            angleMode(DEGREES);
-        }
+function setup() {
+  createCanvas(windowWidth, windowHeight, WEBGL);
+  angleMode(DEGREES);
+  noFill();
+}
 
-        function draw() {
-            // Ethereal background
-            if (currentTree === 0) {
-                background(10, 14, 39);
-            } else {
-                background(26, 20, 48);
-            }
+function draw() {
+  background(currentTree === 0 ? color(10, 14, 39) : color(26, 20, 48));
 
-            // Ambient glow effect
-            if (currentTree === 0) {
-                drawingContext.shadowBlur = 30;
-                drawingContext.shadowColor = 'rgba(192, 192, 255, 0.3)';
-            } else {
-                drawingContext.shadowBlur = 30;
-                drawingContext.shadowColor = 'rgba(255, 215, 0, 0.3)';
-            }
+  ambientLight(50);
+  if (currentTree === 0) {
+    pointLight(190, 190, 255, 0, -300, 300);
+  } else {
+    pointLight(255, 210, 100, 0, -300, 300);
+  }
 
-            randomSeed(1);
-            
-            // Lighting
-            ambientLight(60);
-            if (currentTree === 0) {
-                pointLight(192, 192, 255, 0, -300, 200);
-                pointLight(150, 150, 200, 200, -200, 100);
-            } else {
-                pointLight(255, 215, 0, 0, -300, 200);
-                pointLight(255, 180, 50, 200, -200, 100);
-            }
+  translate(0, 200, 0);
+  if (!isPaused) rotation += rotationSpeed;
+  rotateY(rotation);
 
-            translate(0, 200, 0);
-            
-            if (!isPaused) {
-                rotation += rotationSpeed;
-            }
-            rotateY(rotation);
+  branch(140, 0);
+}
 
-            branch(120);
-        }
+function branch(len, curveAngle) {
+  strokeWeight(map(len, 10, 140, 0.8, 10));
 
-        function branch(len) {
-            // Bark styling based on tree type
-            strokeWeight(map(len, 10, 120, 0.8, 8));
-            
-            if (currentTree === 0) {
-                // Telperion - Silver bark with blue-white tint
-                stroke(180, 180, 200);
-            } else {
-                // Laurelin - Golden bark with warm tint
-                stroke(139, 90, 43);
-            }
+  // Stamkleur
+  if (currentTree === 0) stroke(200, 200, 255, 200);
+  else stroke(200, 150, 60, 200);
 
-            line(0, 0, 0, 0, -len - 2, 0);
-            translate(0, -len, 0);
+  // Bochtige, sierlijke lijnen
+  let x2 = sin(curveAngle) * len * 0.4;
+  let y2 = -len;
+  let x1 = sin(curveAngle / 2) * len * 0.2;
 
-            if (len > 10) {
-                for (let i = 0; i < 3; i++) {
-                    rotateY(random(100, 140));
-                    push();
-                    rotateZ(random(20, 50));
-                    branch(len * 0.67);
-                    pop();
-                }
-            } else {
-                // Leaves/Light-emitting blossoms
-                noStroke();
-                
-                if (currentTree === 0) {
-                    // Telperion - Silver leaves with ethereal glow
-                    let r = 200 + random(-20, 20);
-                    let g = 200 + random(-20, 20);
-                    let b = 255;
-                    let alpha = 220 + random(-30, 0);
-                    fill(r, g, b, alpha);
-                    
-                    // Add glow effect
-                    drawingContext.shadowBlur = 20;
-                    drawingContext.shadowColor = 'rgba(192, 192, 255, 0.8)';
-                } else {
-                    // Laurelin - Golden leaves with warm radiance
-                    let r = 255;
-                    let g = 215 + random(-30, 0);
-                    let b = 0 + random(0, 50);
-                    let alpha = 220 + random(-30, 0);
-                    fill(r, g, b, alpha);
-                    
-                    // Add glow effect
-                    drawingContext.shadowBlur = 20;
-                    drawingContext.shadowColor = 'rgba(255, 215, 0, 0.8)';
-                }
+  beginShape();
+  vertex(0, 0);
+  quadraticVertex(x1, -len * 0.5, x2, y2);
+  endShape();
 
-                translate(5, 0, 0);
-                rotateZ(90);
+  translate(x2, y2, 0);
 
-                // Leaf shape - more elegant and mystical
-                beginShape();
-                for (let i = 45; i < 135; i++) {
-                    let rad = 8;
-                    let x = rad * cos(i);
-                    let y = rad * sin(i);
-                    vertex(x, y);
-                }
-                for (let i = 135; i > 40; i--) {
-                    let rad = 16;
-                    let x = rad * cos(i);
-                    let y = rad * sin(-i) + 12;
-                    vertex(x, y);
-                }
-                endShape(CLOSE);
+  if (len > 15) {
+    let n = int(random(2, 4)); // minder maar sierlijke takken
+    for (let i = 0; i < n; i++) {
+      push();
+      let newLen = len * random(0.6, 0.75);
+      let a = random(-35, 35);
+      let c = curveAngle + random(-15, 15);
+      rotateZ(a);
+      rotateY(random(-20, 20));
+      branch(newLen, c);
+      pop();
+    }
+  } else {
+    drawLeaf();
+  }
+}
 
-                // Add small light orbs for mystical effect
-                push();
-                translate(0, 0, 5);
-                sphere(2);
-                pop();
-            }
-        }
+function drawLeaf() {
+  noStroke();
 
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-        }
+  if (currentTree === 0) {
+    // Telperion: zilver-wit met blauwe schijn
+    let r = 220 + random(-15, 10);
+    let g = 230 + random(-15, 10);
+    let b = 255;
+    fill(r, g, b, 220);
+    drawingContext.shadowBlur = 25;
+    drawingContext.shadowColor = 'rgba(200, 200, 255, 0.8)';
+  } else {
+    // Laurelin: warm goud
+    let r = 255;
+    let g = 210 + random(-20, 20);
+    let b = 80 + random(-10, 10);
+    fill(r, g, b, 230);
+    drawingContext.shadowBlur = 25;
+    drawingContext.shadowColor = 'rgba(255, 210, 100, 0.8)';
+  }
 
-        // Button controls
-        document.getElementById('pauseBtn').addEventListener('click', function() {
-            isPaused = !isPaused;
-            this.textContent = isPaused ? '▶ Hervat Rotatie' : '⏸ Pauzeer Rotatie';
-        });
+  push();
+  rotateZ(random(20, 60));
+  beginShape();
+  for (let i = 0; i < 180; i += 10) {
+    let rad = 6 + sin(i) * 3;
+    let x = rad * cos(i);
+    let y = rad * sin(i);
+    vertex(x, y);
+  }
+  endShape(CLOSE);
 
-        document.getElementById('switchBtn').addEventListener('click', function() {
-            currentTree = (currentTree + 1) % 2;
-            if (currentTree === 0) {
-                this.textContent = '⚡ Wissel Boom';
-            } else {
-                this.textContent = '⚡ Wissel Boom';
-            }
-        });
+  // Lichtbolletje voor magie
+  fill(255, 255, 255, 150);
+  sphere(1.5);
+  pop();
+}
 
-        // Keyboard shortcuts
-        function keyPressed() {
-            if (key === ' ') {
-                isPaused = !isPaused;
-            } else if (key === 't' || key === 'T') {
-                currentTree = (currentTree + 1) % 2;
-            }
-        }
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+document.getElementById('pauseBtn').addEventListener('click', function() {
+  isPaused = !isPaused;
+  this.textContent = isPaused ? '▶ Hervat Rotatie' : '⏸ Pauzeer Rotatie';
+});
+
+document.getElementById('switchBtn').addEventListener('click', function() {
+  currentTree = (currentTree + 1) % 2;
+});
+
     </script>
 </body>
 </html>
