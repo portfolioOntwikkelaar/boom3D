@@ -1,15 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/p5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/addons/p5.sound.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="utf-8" />
+    <title>De Twee Bomen van Valinor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  </head>
-  <body>
-    <main>
-    </main>
-    <script src="sketch.js"></script>
-  </body>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(180deg, #0a0e27 0%, #1a1430 50%, #2d1b3d 100%);
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .header {
+            background: linear-gradient(180deg, rgba(10, 14, 39, 0.95) 0%, rgba(10, 14, 39, 0.7) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            text-align: center;
+            pointer-events: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #c0c0c0 0%, #ffd700 50%, #c0c0c0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        .tree-names {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tree-label {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .tree-label.silver {
+            color: #e0e0ff;
+            border-color: rgba(192, 192, 255, 0.3);
+            background: rgba(192, 192, 255, 0.1);
+            box-shadow: 0 0 20px rgba(192, 192, 255, 0.2);
+        }
+
+        .tree-label.gold {
+            color: #fff4d0;
+            border-color: rgba(255, 215, 0, 0.3);
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            pointer-events: auto;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(20px);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 50%;
+            right: 2rem;
+            transform: translateY(-50%);
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 300px;
+            pointer-events: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .info-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #ffd700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .info-text {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: justify;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .tree-names { gap: 1rem; }
+            .info-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ui-overlay">
+        <div class="header">
+            <h1>De Twee Bomen van Valinor</h1>
+            <div class="subtitle">Telperion & Laurelin</div>
+            <div class="tree-names">
+                <div class="tree-label silver">⟡ Telperion de Witte ⟡</div>
+                <div class="tree-label gold">✦ Laurelin de Gouden ✦</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-title">Legendarische Bomen</div>
+        <div class="info-text">
+            In de Dagen vóór de Dagen plantte Yavanna de Twee Bomen in Valinor. 
+            Telperion, de oudere, droeg zilveren bladeren die zacht licht gaven. 
+            Laurelin, de jongere, droeg gouden bladeren die warm licht verspreidden. 
+            Hun licht verlichtte de wereld voordat de zon en maan werden geschapen.
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="pauseBtn">⏸ Pauzeer Rotatie</button>
+        <button class="btn" id="switchBtn">⚡ Wissel Boom</button>
+    </div>
+
+    <script>
+        let rotation = 0;
+        let isPaused = false;
+        let currentTree = 0; // 0 = silver, 1 = gold
+        let rotationSpeed = 0.3;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight, WEBGL);
+            angleMode(DEGREES);
+        }
+
+        function draw() {
+            // Ethereal background
+            if (currentTree === 0) {
+                background(10, 14, 39);
+            } else {
+                background(26, 20, 48);
+            }
+
+            // Ambient glow effect
+            if (currentTree === 0) {
+                drawingContext.shadowBlur = 30;
+                drawingContext.shadowColor = 'rgba(192, 192, 255, 0.3)';
+            } else {
+                drawingContext.shadowBlur = 30;
+                drawingContext.shadowColor = 'rgba(255, 215, 0, 0.3)';
+            }
+
+            randomSeed(1);
+            
+            // Lighting
+            ambientLight(60);
+            if (currentTree === 0) {
+                pointLight(192, 192, 255, 0, -300, 200);
+                pointLight(150, 150, 200, 200, -200, 100);
+            } else {
+                pointLight(255, 215, 0, 0, -300, 200);
+                pointLight(255, 180, 50, 200, -200, 100);
+            }
+
+            translate(0, 200, 0);
+            
+            if (!isPaused) {
+                rotation += rotationSpeed;
+            }
+            rotateY(rotation);
+
+            branch(120);
+        }
+
+        function branch(len) {
+            // Bark styling based on tree type
+            strokeWeight(map(len, 10, 120, 0.8, 8));
+            
+            if (currentTree === 0) {
+                // Telperion - Silver bark with blue-white tint
+                stroke(180, 180, 200);
+            } else {
+                // Laurelin - Golden bark with warm tint
+                stroke(139, 90, 43);
+            }
+
+            line(0, 0, 0, 0, -len - 2, 0);
+            translate(0, -len, 0);
+
+            if (len > 10) {
+                for (let i = 0; i < 3; i++) {
+                    rotateY(random(100, 140));
+                    push();
+                    rotateZ(random(20, 50));
+                    branch(len * 0.67);
+                    pop();
+                }
+            } else {
+                // Leaves/Light-emitting blossoms
+                noStroke();
+                
+                if (currentTree === 0) {
+                    // Telperion - Silver leaves with ethereal glow
+                    let r = 200 + random(-20, 20);
+                    let g = 200 + random(-20, 20);
+                    let b = 255;
+                    let alpha = 220 + random(-30, 0);
+                    fill(r, g, b, alpha);
+                    
+                    // Add glow effect
+                    drawingContext.shadowBlur = 20;
+                    drawingContext.shadowColor = 'rgba(192, 192, 255, 0.8)';
+                } else {
+                    // Laurelin - Golden leaves with warm radiance
+                    let r = 255;
+                    let g = 215 + random(-30, 0);
+                    let b = 0 + random(0, 50);
+                    let alpha = 220 + random(-30, 0);
+                    fill(r, g, b, alpha);
+                    
+                    // Add glow effect
+                    drawingContext.shadowBlur = 20;
+                    drawingContext.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                }
+
+                translate(5, 0, 0);
+                rotateZ(90);
+
+                // Leaf shape - more elegant and mystical
+                beginShape();
+                for (let i = 45; i < 135; i++) {
+                    let rad = 8;
+                    let x = rad * cos(i);
+                    let y = rad * sin(i);
+                    vertex(x, y);
+                }
+                for (let i = 135; i > 40; i--) {
+                    let rad = 16;
+                    let x = rad * cos(i);
+                    let y = rad * sin(-i) + 12;
+                    vertex(x, y);
+                }
+                endShape(CLOSE);
+
+                // Add small light orbs for mystical effect
+                push();
+                translate(0, 0, 5);
+                sphere(2);
+                pop();
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+
+        // Button controls
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            isPaused = !isPaused;
+            this.textContent = isPaused ? '▶ Hervat Rotatie' : '⏸ Pauzeer Rotatie';
+        });
+
+        document.getElementById('switchBtn').addEventListener('click', function() {
+            currentTree = (currentTree + 1) % 2;
+            if (currentTree === 0) {
+                this.textContent = '⚡ Wissel Boom';
+            } else {
+                this.textContent = '⚡ Wissel Boom';
+            }
+        });
+
+        // Keyboard shortcuts
+        function keyPressed() {
+            if (key === ' ') {
+                isPaused = !isPaused;
+            } else if (key === 't' || key === 'T') {
+                currentTree = (currentTree + 1) % 2;
+            }
+        }
+    </script>
+</body>
 </html>
